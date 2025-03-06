@@ -87,8 +87,9 @@ class PlatoController extends Controller
         $plato = new Plato();
         $plato->nombre = $request->nombre;
         $plato->precio = $request->precio;
-        $plato->foto = "$directory/$imageName";
+        $plato->foto = file_get_contents($request->file('foto')->getRealPath()); // Guarda la imagen en la BD como BLOB
         $plato->save();
+
 
         return response()->json(['status' => true, 'message' => 'Plato creado con éxito.', 'plato' => $plato], 201);
     }
@@ -195,10 +196,6 @@ class PlatoController extends Controller
     public function destroy($id)
     {
         $plato = Plato::find($id);
-        if (!$plato) {
-            return response()->json(['message' => 'Plato no encontrado'], 404);
-        }
-
         $plato->delete();
         return response()->json(['message' => 'Plato eliminado'], 200);
     }
