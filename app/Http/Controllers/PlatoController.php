@@ -94,11 +94,16 @@ class PlatoController extends Controller
         return response()->json(['status' => false, 'message' => $validate->errors()], 422);
     }
 
-    // Asignar valores solo si están presentes
-    $plato->nombre = $request->input('nombre', $plato->nombre);
-    $plato->precio = $request->input('precio', $plato->precio);
+    // Actualizar los campos solo si se proporcionan en la solicitud
+    if ($request->has('nombre')) {
+        $plato->nombre = $request->nombre;
+    }
 
-    // Si se envía una nueva imagen, actualizar el campo foto
+    if ($request->has('precio')) {
+        $plato->precio = $request->precio;
+    }
+
+    // Si se envía una nueva foto, actualizarla
     if ($request->hasFile('foto')) {
         $plato->foto = file_get_contents($request->file('foto')->getRealPath());
     }
@@ -106,7 +111,7 @@ class PlatoController extends Controller
     // Verificar antes de guardar
     Log::info('Datos antes de guardar: ', $plato->toArray());
 
-    // Guardamos los cambios
+    // Guardar los cambios
     $plato->save();
 
     // Verificar después de guardar
