@@ -29,41 +29,36 @@ class PlatoController extends Controller
         $validate = Validator::make($request->all(), [
             'nombre' => 'required|string|max:255',
             'precio' => 'required|numeric',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048', // La imagen es opcional
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
         ]);
 
         if ($validate->fails()) {
             return response()->json(['status' => false, 'message' => $validate->errors()], 422);
         }
 
-        $plato = new Plato();
-        $plato->nombre = $request->nombre;
-        $plato->precio = $request->precio;
-
-        // Si se sube una imagen, la guardamos en formato BLOB
-        if ($request->hasFile('foto')) {
-            $plato->foto = file_get_contents($request->file('foto')->getRealPath());
-        } else {
-            $plato->foto = null; // Si no hay imagen, se guarda NULL
-        }
-
-        $plato->save();
+        $plato = Plato::updateOrCreate(
+            ['nombre' => $request->nombre],
+            [
+                'precio' => $request->precio,
+                'foto' => $request->hasFile('foto') ? file_get_contents($request->file('foto')->getRealPath()) : null
+            ]
+        );
 
         return response()->json([
             'status' => true,
-            'message' => 'Plato creado con éxito.',
+            'message' => 'Plato creado o actualizado con éxito.',
             'plato' => [
                 'id' => $plato->id,
                 'nombre' => $plato->nombre,
                 'precio' => $plato->precio,
-                'foto' => $plato->foto ? base64_encode($plato->foto) : null // Convertimos a base64 si existe
+                'foto' => $plato->foto ? base64_encode($plato->foto) : null
             ]
         ], 201);
-
     } catch (\Exception $e) {
         return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
     }
 }
+
 
 
     public function show($id)
@@ -82,31 +77,33 @@ class PlatoController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        $plato = Plato::find($id);
-        if (!$plato) {
-            return response()->json(['message' => 'Plato no encontrado'], 404);
-        }
-
-        $validate = Validator::make($request->all(), [
-            'nombre' => 'string|max:255',
-            'precio' => 'numeric',
-            'foto' => 'image|mimes:jpeg,png,jpg,svg|max:2048',
-        ]);
-
-        if ($validate->fails()) {
-            return response()->json(['status' => false, 'message' => $validate->errors()], 422);
-        }
-
-        if ($request->hasFile('foto')) {
-            $file = $request->file('foto');
-            $plato->foto = file_get_contents($file->getRealPath()); // Guardar la nueva imagen en binario
-        }
-
-        $plato->update($request->only(['nombre', 'precio']));
-
-        return response()->json(['status' => true, 'message' => 'Plato actualizado con éxito.', 'plato' => $plato], 200);
+{
+    $plato = Plato::find($id);
+    if (!$plato) {
+        return response()->json(['message' => 'Plato no encontrado'], 404);
     }
+
+    $validate = Validator::make($request->all(), [
+        'nombre' => 'string|max:255',
+        'precio' => 'numeric',
+        'foto' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
+    ]);
+
+    if ($validate->fails()) {
+        return response()->json(['status' => false, 'message' => $validate->errors()], 422);
+    }
+
+    $plato->nombre = $request->nombre ?? $plato->nombre;
+    $plato->precio = $request->precio ?? $plato->precio;
+
+    if ($request->hasFile('foto')) {
+        $plato->foto = file_get_contents($request->file('foto')->getRealPath());
+    }
+
+    $plato->save();
+
+    return response()->json(['status' => true, 'message' => 'Plato actualizado con éxito.', 'plato' => $plato], 200);
+}
 
     public function destroy($id)
     {
@@ -116,6 +113,5 @@ class PlatoController extends Controller
         }
 
         $plato->delete();
-        return response()->json(['message' => 'Plato eliminado'], 200);
     }
 }
