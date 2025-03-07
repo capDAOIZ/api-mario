@@ -29,7 +29,7 @@ class PlatoController extends Controller
         $validate = Validator::make($request->all(), [
             'nombre' => 'required|string|max:255',
             'precio' => 'required|numeric',
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048', // La imagen es opcional
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048', // La imagen es opcional
         ]);
 
         if ($validate->fails()) {
@@ -41,10 +41,10 @@ class PlatoController extends Controller
         $plato->precio = $request->precio;
 
         // Si se sube una imagen, la guardamos en formato BLOB
-        if ($request->hasFile('imagen')) {
-            $plato->imagen = file_get_contents($request->file('imagen')->getRealPath());
+        if ($request->hasFile('foto')) {
+            $plato->foto = file_get_contents($request->file('foto')->getRealPath());
         } else {
-            $plato->imagen = null; // Si no hay imagen, se guarda NULL
+            $plato->foto = null; // Si no hay imagen, se guarda NULL
         }
 
         $plato->save();
@@ -56,7 +56,7 @@ class PlatoController extends Controller
                 'id' => $plato->id,
                 'nombre' => $plato->nombre,
                 'precio' => $plato->precio,
-                'imagen' => $plato->imagen ? base64_encode($plato->imagen) : null // Convertimos a base64 si existe
+                'foto' => $plato->foto ? base64_encode($plato->foto) : null // Convertimos a base64 si existe
             ]
         ], 201);
 
