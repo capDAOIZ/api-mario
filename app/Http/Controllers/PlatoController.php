@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Plato;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class PlatoController extends Controller
 {
@@ -93,17 +94,25 @@ class PlatoController extends Controller
         return response()->json(['status' => false, 'message' => $validate->errors()], 422);
     }
 
-    // Actualizar nombre y precio solo si se pasan valores nuevos
-    $plato->nombre = $request->nombre ?? $plato->nombre;
-    $plato->precio = $request->precio ?? $plato->precio;
+    // Asignar valores solo si están presentes
+    $plato->fill([
+        'nombre' => $request->nombre ?? $plato->nombre,
+        'precio' => $request->precio ?? $plato->precio,
+    ]);
 
-    // Si se envía una nueva imagen, actualizarla
+    // Si se envía una nueva imagen, actualizar el campo foto
     if ($request->hasFile('foto')) {
         $plato->foto = file_get_contents($request->file('foto')->getRealPath());
     }
 
-    // Guardar el plato actualizado
+    // Verificar antes de guardar
+    Log::info('Datos antes de guardar: ', $plato->toArray());
+
+    // Guardamos los cambios
     $plato->save();
+
+    // Verificar después de guardar
+    Log::info('Datos después de guardar: ', $plato->toArray());
 
     return response()->json(['status' => true, 'message' => 'Plato actualizado con éxito.', 'plato' => $plato], 200);
 }
