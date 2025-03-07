@@ -93,17 +93,21 @@ class PlatoController extends Controller
         return response()->json(['status' => false, 'message' => $validate->errors()], 422);
     }
 
+    // Actualizar nombre y precio solo si se pasan valores nuevos
     $plato->nombre = $request->nombre ?? $plato->nombre;
     $plato->precio = $request->precio ?? $plato->precio;
 
+    // Si se envía una nueva imagen, actualizarla
     if ($request->hasFile('foto')) {
         $plato->foto = file_get_contents($request->file('foto')->getRealPath());
     }
 
+    // Guardar el plato actualizado
     $plato->save();
 
     return response()->json(['status' => true, 'message' => 'Plato actualizado con éxito.', 'plato' => $plato], 200);
 }
+
 
     public function destroy($id)
     {
