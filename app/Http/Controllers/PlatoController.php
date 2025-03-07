@@ -24,28 +24,47 @@ class PlatoController extends Controller
     }
 
     public function store(Request $request)
-    {
+{
+    try {
         $validate = Validator::make($request->all(), [
             'nombre' => 'required|string|max:255',
             'precio' => 'required|numeric',
-            'foto' => 'required|image|mimes:jpeg,png,jpg,svg|max:2048',
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048', // La imagen es opcional
         ]);
 
         if ($validate->fails()) {
             return response()->json(['status' => false, 'message' => $validate->errors()], 422);
         }
 
-        $file = $request->file('foto');
-        $imageData = file_get_contents($file->getRealPath()); // Convertir imagen a binario
-
         $plato = new Plato();
         $plato->nombre = $request->nombre;
         $plato->precio = $request->precio;
-        $plato->foto = $imageData; // Guardar como BLOB
+
+        // Si se sube una imagen, la guardamos en formato BLOB
+        if ($request->hasFile('imagen')) {
+            $plato->imagen = file_get_contents($request->file('imagen')->getRealPath());
+        } else {
+            $plato->imagen = null; // Si no hay imagen, se guarda NULL
+        }
+
         $plato->save();
 
-        return response()->json(['status' => true, 'message' => 'Plato creado con éxito.', 'plato' => $plato], 201);
+        return response()->json([
+            'status' => true,
+            'message' => 'Plato creado con éxito.',
+            'plato' => [
+                'id' => $plato->id,
+                'nombre' => $plato->nombre,
+                'precio' => $plato->precio,
+                'imagen' => $plato->imagen ? base64_encode($plato->imagen) : null // Convertimos a base64 si existe
+            ]
+        ], 201);
+
+    } catch (\Exception $e) {
+        return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
     }
+}
+
 
     public function show($id)
     {

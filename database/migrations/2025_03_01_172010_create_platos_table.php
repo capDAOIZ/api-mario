@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->string('nombre', 255);
             $table->decimal('precio', 8, 2);
-            $table->binary('foto');
+            $table->binary('foto')->nullable()->change();
             $table->timestamps();
         });
     }
