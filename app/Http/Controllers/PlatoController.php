@@ -85,8 +85,8 @@ class PlatoController extends Controller
     }
 
     $validate = Validator::make($request->all(), [
-        'nombre' => 'string|max:255',
-        'precio' => 'numeric',
+        'nombre' => 'nullable|string|max:255',
+        'precio' => 'nullable|numeric',
         'foto' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
     ]);
 
@@ -95,10 +95,8 @@ class PlatoController extends Controller
     }
 
     // Asignar valores solo si están presentes
-    $plato->fill([
-        'nombre' => $request->nombre ?? $plato->nombre,
-        'precio' => $request->precio ?? $plato->precio,
-    ]);
+    $plato->nombre = $request->input('nombre', $plato->nombre);
+    $plato->precio = $request->input('precio', $plato->precio);
 
     // Si se envía una nueva imagen, actualizar el campo foto
     if ($request->hasFile('foto')) {
@@ -116,6 +114,7 @@ class PlatoController extends Controller
 
     return response()->json(['status' => true, 'message' => 'Plato actualizado con éxito.', 'plato' => $plato], 200);
 }
+
 
 
     public function destroy($id)
